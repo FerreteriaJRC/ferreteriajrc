@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   BookOpen,
   CheckCircle2,
   Download,
