@@ -4,17 +4,30 @@ import CategoriesPage from "./pages/CategoriesPage"
 import BrandsPage from "./pages/BrandsPage"
 import PortalPage from "./pages/PortalPage"
 import PortalDashboardPage from "./pages/PortalDashboardPage"
+import ResetPasswordPage from "./pages/ResetPasswordPage"
+import { AuthProvider } from "./providers/AuthProvider"
+import { ProtectedRoute } from "./components/ProtectedRoute"
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/categorias" element={<CategoriesPage />} />
-        <Route path="/marcas" element={<BrandsPage />} />
-        <Route path="/portal" element={<PortalPage />} />
-        <Route path="/portal/dashboard" element={<PortalDashboardPage />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/categorias" element={<CategoriesPage />} />
+          <Route path="/marcas" element={<BrandsPage />} />
+          <Route path="/portal" element={<PortalPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/portal/dashboard"
+            element={
+              <ProtectedRoute>
+                <PortalDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

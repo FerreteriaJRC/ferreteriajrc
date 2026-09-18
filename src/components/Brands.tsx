@@ -5,31 +5,33 @@ import { Link } from "react-router-dom"
 
 type Brand = {
   name: string
+  logo?: string
   href?: string
 }
 
 const brands: Brand[] = [
-  { name: "KEX" },
-  { name: "3Keego" },
-  { name: "Mastercut" },
-  { name: "Moore & Wright" },
-  { name: "OSG" },
-  { name: "Somta" },
-  { name: "Ades" },
-  { name: "Assab" },
-  { name: "Balaji" },
-  { name: "Cle-Line" },
-  { name: "Congress" },
-  { name: "Groz" },
-  { name: "Mitutoyo" },
-  { name: "Palbit" },
-  { name: "Shopaid" },
-  { name: "Stanley" },
-  { name: "Starrett" },
-  { name: "TMX" },
-  { name: "Vertex" },
-  { name: "Forza" },
-  { name: "Jaz" },
+  { name: "KEX", logo: "/brands/KEX.webp" },
+  { name: "3Keego", logo: "/brands/3KEEGO.png" },
+  { name: "Mastercut", logo: "/brands/MASTERCUT.png" },
+  { name: "Moore & Wright", logo: "/brands/MOORE&WRIGHT.png" },
+  { name: "OSG", logo: "/brands/OSG.webp" },
+  { name: "Somta", logo: "/brands/SOMTA.png" },
+  { name: "Ades", logo: "/brands/ADES.png" },
+  { name: "Assab", logo: "/brands/ASSAB.png" },
+  { name: "Balaji", logo: "/brands/BALAJI.png" },
+  { name: "Cle-Line", logo: "/brands/CLE-LINE.png" },
+  { name: "Congress", logo: "/brands/CONGRESS.png" },
+  { name: "Groz", logo: "/brands/GROZ.png" },
+  { name: "Mitutoyo", logo: "/brands/MITUTOYO.png" },
+  { name: "Palbit", logo: "/brands/PALBIT.png" },
+  { name: "Shopaid", logo: "/brands/SHOPAID.png" },
+  // { name: "Stanley", logo: "/brands/STANLEY.png" },
+  { name: "Starrett", logo: "/brands/STARRET.png" },
+  { name: "TMX", logo: "/brands/TMX.png" },
+  { name: "Vertex", logo: "/brands/VERTEX.png" },
+  { name: "Forza", logo: "/brands/FORZA.webp" },
+  { name: "Jaz", logo: "/brands/JAZ.png" },
+  { name: "Llambril", logo: "/brands/LLAMBRICH.webp" }
 ]
 
 export default function Brands() {
@@ -59,7 +61,11 @@ export default function Brands() {
               href={brand.href ?? "/marcas"}
               className="group flex h-20 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:text-primary"
             >
-              {brand.name}
+              {brand.logo ? (
+                <img src={brand.logo} alt={brand.name} className="max-h-12 max-w-full object-contain" />
+              ) : (
+                brand.name
+              )}
             </a>
           ))}
         </div>

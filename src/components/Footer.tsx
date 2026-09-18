@@ -22,7 +22,7 @@ export default function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div className="space-y-5">
             <a href="#" className="inline-flex items-center gap-3">
-              <img src="/LOGOJRC.webp" alt="Ferretería JRC" className="h-14 w-auto object-contain" />
+              <img src="/LOGOJRC.webp" alt="Ferretería JRC" className="h-30 w-auto object-contain" />
             </a>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
               Proveedor especializado para la industria metalmecánica en Colombia.

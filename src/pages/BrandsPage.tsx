@@ -4,6 +4,7 @@ import Header from "../components/Header"
 
 type Brand = {
   name: string
+  logo?: string
   category: string
   description: string
   country: string
@@ -12,7 +13,8 @@ type Brand = {
 
 const brands: Brand[] = [
   {
-    name: "Assab",
+    name: "",
+    logo: "/brands/ASSAB.png",
     category: "Aceros y materiales",
     description: "Aceros especiales, láminas calibradas y shims para matricería, moldes y mantenimiento.",
     country: "Suecia",
@@ -20,6 +22,7 @@ const brands: Brand[] = [
   },
   {
     name: "Fecin",
+    logo: "/brands/FECIN.png",
     category: "Cepillos industriales",
     description: "Gratas y cepillos técnicos para limpieza, desbaste y preparación de superficies metálicas.",
     country: "España",
@@ -27,6 +30,7 @@ const brands: Brand[] = [
   },
   {
     name: "Forza",
+    logo: "/brands/FORZA.png",
     category: "Herramienta eléctrica",
     description: "Herramienta eléctrica de trabajo pesado con excelente disponibilidad de repuestos en el país.",
     country: "Colombia",
@@ -34,6 +38,7 @@ const brands: Brand[] = [
   },
   {
     name: "Groz",
+    logo: "/brands/GROZ.png",
     category: "Herramienta manual",
     description: "Llaves, prensas y accesorios de taller en acero forjado para uso industrial intensivo.",
     country: "India",
@@ -41,6 +46,7 @@ const brands: Brand[] = [
   },
   {
     name: "JAZ",
+    logo: "/brands/JAZ.png",
     category: "Abrasivos",
     description: "Discos de corte, desbaste y bandas abrasivas de alto rendimiento para metal e inoxidable.",
     country: "España",
@@ -48,6 +54,7 @@ const brands: Brand[] = [
   },
   {
     name: "KEX",
+    logo: "/brands/KEX.png",
     category: "Fluidos y lubricantes",
     description: "Refrigerantes solubles, aceites de corte y lubricantes de vías formulados para la industria metalmecánica.",
     country: "Colombia",
@@ -55,6 +62,7 @@ const brands: Brand[] = [
   },
   {
     name: "Mitutoyo",
+    logo: "/brands/MITUTOYO.png",
     category: "Instrumentos de medición",
     description: "Líder global en metrología dimensional: calibradores, micrómetros, comparadores y sistemas de inspección.",
     country: "Japón",
@@ -62,6 +70,7 @@ const brands: Brand[] = [
   },
   {
     name: "OSG",
+    logo: "/brands/OSG.png",
     category: "Herramientas de corte",
     description: "Fabricante de brocas, machos y fresas de alto rendimiento con recubrimientos avanzados para producción exigente.",
     country: "Japón",
@@ -69,6 +78,7 @@ const brands: Brand[] = [
   },
   {
     name: "Somta",
+    logo: "/brands/SOMTA.png",
     category: "Corte y mecanizado",
     description: "Brocas, fresas y escariadores en HSS y carburo con excelente relación costo-beneficio para taller y CNC.",
     country: "Sudáfrica",
@@ -76,6 +86,7 @@ const brands: Brand[] = [
   },
   {
     name: "Stanley",
+    logo: "/brands/STANLEY.png",
     category: "Herramienta manual y eléctrica",
     description: "Herramientas manuales y eléctricas de uso profesional con garantía y disponibilidad inmediata.",
     country: "Estados Unidos",
@@ -83,6 +94,7 @@ const brands: Brand[] = [
   },
   {
     name: "Starrett",
+    logo: "/brands/STARRETT.png",
     category: "Metrología y sierras",
     description: "Referente mundial en instrumentos de medición de precisión y hojas de sierra bimetálicas para corte.",
     country: "Estados Unidos",
@@ -90,6 +102,7 @@ const brands: Brand[] = [
   },
   {
     name: "TMX",
+    logo: "/brands/TMX.png",
     category: "Maquinaria y sujeción",
     description: "Tornos, chucks y portaherramientas de precisión con respaldo técnico para producción continua.",
     country: "Taiwán",
@@ -104,7 +117,11 @@ function BrandCard({ brand }: { brand: Brand }) {
       className="group flex min-h-52 flex-col rounded-xl border border-border border-t-2 border-t-primary bg-card p-6 transition-colors hover:border-primary"
     >
       <div className="flex items-start justify-between gap-4">
-        <h2 className="text-2xl font-extrabold text-foreground">{brand.name}</h2>
+        {brand.logo ? (
+          <img src={brand.logo} alt={brand.name} className="h-12 max-w-40 object-contain object-left" />
+        ) : (
+          <h2 className="text-2xl font-extrabold text-foreground">{brand.name}</h2>
+        )}
         <ArrowRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:translate-x-1" />
       </div>
       <span className="mt-3 inline-flex w-fit rounded-sm bg-primary/10 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
