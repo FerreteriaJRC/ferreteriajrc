@@ -76,7 +76,7 @@ export const mockUsers: Record<
   "admin@ferreteriajrc.com": {
     password: "admin123",
     user: {
-      id: "1",
+      id: 1,
       email: "admin@ferreteriajrc.com",
       name: "Administrador",
       role: UserRoleObj.ADMIN,
@@ -86,7 +86,7 @@ export const mockUsers: Record<
   "gerente@ferreteriajrc.com": {
     password: "gerente123",
     user: {
-      id: "2",
+      id: 2,
       email: "gerente@ferreteriajrc.com",
       name: "Henry Ramírez",
       role: UserRoleObj.GERENTE,
@@ -96,7 +96,7 @@ export const mockUsers: Record<
   "vendedor@ferreteriajrc.com": {
     password: "vendedor123",
     user: {
-      id: "3",
+      id: 3,
       email: "vendedor@ferreteriajrc.com",
       name: "Vendedor Demo",
       role: UserRoleObj.VENDEDOR,
@@ -106,7 +106,7 @@ export const mockUsers: Record<
   "cliente@empresa.com": {
     password: "cliente123",
     user: {
-      id: "4",
+      id: 4,
       email: "cliente@empresa.com",
       name: "Cliente Demo",
       role: UserRoleObj.CLIENTE,

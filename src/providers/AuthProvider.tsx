@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (response.user) {
               setUser({
                 ...response.user,
+                role: response.user.role as UserRole,
                 permissions: response.user.permissions as Permission[],
               })
             }
