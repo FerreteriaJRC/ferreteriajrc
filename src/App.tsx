@@ -5,6 +5,7 @@ import BrandsPage from "./pages/BrandsPage"
 import PortalPage from "./pages/PortalPage"
 import PortalDashboardPage from "./pages/PortalDashboardPage"
 import ResetPasswordPage from "./pages/ResetPasswordPage"
+import ProductDetailPage from "./pages/ProductDetailPage"
 import { AuthProvider } from "./providers/AuthProvider"
 import { ProtectedRoute } from "./components/ProtectedRoute"
 
@@ -15,6 +16,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/categorias" element={<CategoriesPage />} />
+          <Route path="/categorias/producto/:id" element={<ProductDetailPage />} />
           <Route path="/marcas" element={<BrandsPage />} />
           <Route path="/portal" element={<PortalPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

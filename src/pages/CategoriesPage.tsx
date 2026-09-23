@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   ArrowRight,
   ChevronDown,
@@ -8,14 +8,8 @@ import {
 } from "lucide-react"
 import { Link, useSearchParams } from "react-router-dom"
 import Header from "../components/Header"
-
-type Product = {
-  name: string
-  category: string
-  brand: string
-  description: string
-  imagePosition: string
-}
+import { supabase } from "../lib/supabase"
+import type { Product } from "../types/product"
 
 const categories = [
   "Todos",
@@ -30,103 +24,31 @@ const categories = [
   "Materiales",
 ]
 
-const products: Product[] = [
-  {
-    name: "Disco de corte para metal",
-    category: "Abrasivos",
-    brand: "JAZ",
-    description: "Disco abrasivo de alta duración para corte fino en acero inoxidable y metales ferrosos.",
-    imagePosition: "object-left",
-  },
-  {
-    name: "Grata cepillo circular acero",
-    category: "Abrasivos",
-    brand: "Fecin",
-    description: "Cepillo circular en alambre trenzado ideal para desbaste y limpieza de superficies metálicas.",
-    imagePosition: "object-center",
-  },
-  {
-    name: "Broca HSS cobalto",
-    category: "Corte",
-    brand: "OSG",
-    description: "Broca de alto rendimiento y corte rápido para perforación de aceros aleados.",
-    imagePosition: "object-right",
-  },
-  {
-    name: "Taladro industrial 18V",
-    category: "Eléctricos",
-    brand: "KEX",
-    description: "Herramienta inalámbrica de torque controlado para montajes y mantenimiento industrial.",
-    imagePosition: "object-left",
-  },
-  {
-    name: "Torno paralelo de precisión",
-    category: "Maquinaria",
-    brand: "KEX",
-    description: "Solución robusta para mecanizado, fabricación de piezas y trabajos de mantenimiento.",
-    imagePosition: "object-center",
-  },
-  {
-    name: "Protección térmica industrial",
-    category: "Materiales",
-    brand: "JRC",
-    description: "Materiales técnicos para aislamiento y protección en ambientes de alta temperatura.",
-    imagePosition: "object-right",
-  },
-  {
-    name: "Micrómetro exterior 0-25 mm",
-    category: "Medición",
-    brand: "Mitutoyo",
-    description: "Instrumento de precisión para control dimensional en procesos metalmecánicos.",
-    imagePosition: "object-left",
-  },
-  {
-    name: "Juego de llaves profesionales",
-    category: "Manuales",
-    brand: "Stanley",
-    description: "Juego completo para mantenimiento general, montaje y reparación de equipos.",
-    imagePosition: "object-center",
-  },
-  {
-    name: "Refrigerante soluble para corte",
-    category: "Fluidos",
-    brand: "KEX",
-    description: "Fluido de corte para mejorar el acabado, la vida útil de la herramienta y la disipación térmica.",
-    imagePosition: "object-right",
-  },
-]
-
 function ProductCard({ product }: { product: Product }) {
   return (
-    <article className="group overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary">
+    <Link to={`/categorias/producto/${product.id}`} className="group block overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary">
       <div className="relative h-56 overflow-hidden bg-muted">
         <img
-          src="/Fondo_Nuevo.webp"
-          alt=""
-          className={`h-full w-full object-cover grayscale transition-transform duration-500 group-hover:scale-105 ${product.imagePosition}`}
+          src={product.foto || "/Fondo_Nuevo.webp"}
+          alt={product.referencia}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-background/55" />
         <span className="absolute left-5 top-5 rounded-sm bg-primary px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">
-          {product.category}
+          {product.categoria || "Producto"}
         </span>
       </div>
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-bold text-foreground">{product.name}</h2>
-          <span className="shrink-0 text-xs font-bold text-muted-foreground">{product.brand}</span>
+          <h2 className="text-lg font-bold text-foreground">{product.referencia}</h2>
+          <span className="shrink-0 text-xs font-bold text-muted-foreground">{product.marca}</span>
         </div>
-        <p className="mt-3 min-h-12 text-sm leading-6 text-muted-foreground">{product.description}</p>
-        <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-          <a href="#" className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary-hover">
-            Ver más
-          </a>
-          <a href="https://ferreteriajrc.com/modules/whatsapp.php" className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary">
-            <MessageCircle className="h-3.5 w-3.5" />
-            Cotizar
-          </a>
+        <p className="mt-3 min-h-12 text-sm leading-6 text-muted-foreground">{product.descripcion}</p>
+        <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs font-bold uppercase tracking-widest text-primary">
+          Ver detalle
+          <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
       </div>
-    </article>
+    </Link>
   )
 }
 
@@ -139,18 +61,45 @@ export default function CategoriesPage() {
   )
   const [selectedBrand, setSelectedBrand] = useState(initialBrand)
   const [query, setQuery] = useState("")
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoading(true)
+      setLoadError(null)
+
+      const { data, error } = await supabase
+        .from("productos")
+        .select("id, codigo, referencia, descripcion, marca, categoria, foto, detalle, bloglink, activo, created_at, updated_at")
+        .eq("activo", true)
+        .order("referencia")
+
+      if (error) {
+        setLoadError(error.message)
+        setProducts([])
+      } else {
+        setProducts((data ?? []) as Product[])
+      }
+
+      setIsLoading(false)
+    }
+
+    void loadProducts()
+  }, [])
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
     return products.filter((product) => {
-      const matchesCategory = selectedCategory === "Todos" || product.category === selectedCategory
-      const matchesBrand = selectedBrand === "Todos" || product.brand.toLowerCase() === selectedBrand.toLowerCase()
-      const matchesQuery = !normalizedQuery || [product.name, product.category, product.brand].some((value) =>
-        value.toLowerCase().includes(normalizedQuery),
+      const matchesCategory = selectedCategory === "Todos" || product.categoria === selectedCategory
+      const matchesBrand = selectedBrand === "Todos" || product.marca.toLowerCase() === selectedBrand.toLowerCase()
+      const matchesQuery = !normalizedQuery || [product.codigo, product.referencia, product.descripcion, product.categoria, product.marca, product.detalle].some((value) =>
+        value?.toLowerCase().includes(normalizedQuery),
       )
       return matchesCategory && matchesBrand && matchesQuery
     })
-  }, [query, selectedCategory, selectedBrand])
+  }, [ products, query, selectedCategory, selectedBrand])
 
   const selectCategory = (category: string) => {
     setSelectedCategory(category)
@@ -251,9 +200,18 @@ export default function CategoriesPage() {
                   </p>
                 </div>
 
-                {filteredProducts.length > 0 ? (
+                {isLoading ? (
+                  <div className="mt-8 rounded-xl border border-border p-12 text-center text-muted-foreground">
+                    Cargando productos...
+                  </div>
+                ) : loadError ? (
+                  <div className="mt-8 rounded-xl border border-red-500/40 p-12 text-center">
+                    <p className="font-bold text-foreground">No pudimos cargar los productos</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{loadError}</p>
+                  </div>
+                ) : filteredProducts.length > 0 ? (
                   <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                    {filteredProducts.map((product) => <ProductCard key={product.name} product={product} />)}
+                    {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
                   </div>
                 ) : (
                   <div className="mt-8 rounded-xl border border-dashed border-border p-12 text-center">
