@@ -59,7 +59,7 @@ export default function Brands() {
             <a
               key={brand.name}
               href={brand.href ?? "/marcas"}
-              className="group flex h-20 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:text-primary"
+              className="group flex h-20 items-center justify-center rounded-xl border border-border bg-[#cecccc] px-4 text-sm font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:text-primary"
             >
               {brand.logo ? (
                 <img src={brand.logo} alt={brand.name} className="max-h-12 max-w-full object-contain" />
