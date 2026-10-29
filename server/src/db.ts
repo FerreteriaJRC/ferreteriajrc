@@ -78,7 +78,7 @@ export function initializeDatabase() {
   `)
 
   // Insertar permisos por defecto
-  const roles = ["admin", "gerente", "vendedor", "cliente"]
+  const roles = ["admin", "gerente", "bodega", "vendedor", "cliente"]
   const allPermissions = [
     "view_cartera",
     "manage_cartera",
@@ -92,6 +92,7 @@ export function initializeDatabase() {
     "create_traslados",
     "view_retenciones",
     "manage_retenciones",
+    "view_nota_devolucion",
     "view_mensajeria",
     "manage_mensajeria",
     "view_recaudos",
@@ -119,6 +120,7 @@ export function initializeDatabase() {
       "view_reportes",
       "export_reportes",
     ],
+    bodega: ["view_nota_devolucion"],
     vendedor: [
       "view_catalogos",
       "download_catalogos",
@@ -153,6 +155,32 @@ export function initializeDatabase() {
       }
     }
     console.log("✅ Permisos de roles inicializados")
+  }
+
+  const notaDevolucionPermission = db
+    .prepare("SELECT COUNT(*) as count FROM role_permissions WHERE permission = ?")
+    .get("view_nota_devolucion") as { count: number }
+
+  if (notaDevolucionPermission.count === 0) {
+    for (const role of ["admin", "bodega"]) {
+      db.prepare(
+        "INSERT OR IGNORE INTO role_permissions (role, permission) VALUES (?, ?)"
+      ).run(role, "view_nota_devolucion")
+    }
+  }
+
+  for (const role of ["admin", "gerente", "bodega", "vendedor"]) {
+    for (const permission of ["view_traslados", "create_traslados"]) {
+      db.prepare(
+        "INSERT OR IGNORE INTO role_permissions (role, permission) VALUES (?, ?)"
+      ).run(role, permission)
+    }
+  }
+
+  for (const role of ["admin", "gerente", "bodega"]) {
+    db.prepare(
+      "INSERT OR IGNORE INTO role_permissions (role, permission) VALUES (?, ?)"
+    ).run(role, "view_vendedores")
   }
 
   console.log("✅ Base de datos inicializada")

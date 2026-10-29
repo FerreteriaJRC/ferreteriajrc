@@ -2,7 +2,7 @@
 
 export const UserRole = {
   ADMIN: "admin",
-  GERENTE: "gerente",
+  BODEGA: "bodega",
   VENDEDOR: "vendedor",
   CLIENTE: "cliente",
 } as const
@@ -17,6 +17,7 @@ export const Permission = {
   // Permisos de Catálogos
   VIEW_CATALOGOS: "view_catalogos",
   DOWNLOAD_CATALOGOS: "download_catalogos",
+
 
   // Permisos de Compras
   VIEW_COMPRAS: "view_compras",
@@ -33,6 +34,9 @@ export const Permission = {
   // Permisos de Retenciones
   VIEW_RETENCIONES: "view_retenciones",
   MANAGE_RETENCIONES: "manage_retenciones",
+
+  // Permisos de Nota Devolución
+  VIEW_NOTA_DEVOLUCION: "view_nota_devolucion",
 
   // Permisos de Mensajería
   VIEW_MENSAJERIA: "view_mensajeria",

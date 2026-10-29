@@ -428,8 +428,11 @@ Proyecto de Ferretería JRC - 2026
 
 Última actualización: **2026-08-26**  
 Versión: **1.0.0-alpha**  
-Estado: **✅ Fase 1 Completada**
+Estado: **Fase 1 Completada**
 
 
 **Proceso en el que se quedo**
 Implemente el tema de los roles y conectar con la base de datos, sin embargo me queda pendiente el tema de crear la base de datos en SQlite. Tengo que mirar como puedo manipular la base de datos y crear la tabla de usuarios para que funcione la autenticacion y revisar tambien que tome los toles. Esto de los roles funcionaba si los tipaba (Sin bases de datos)
+
+26/10/26
+Se avanzo en cuanto al funcionamiento del modulo de vendedores, sin embargo aun falta crear los vendedores he ingresar los datos correctos ya que por el momento solo esta funcionando si el vendedor que se selecciona es david cutiva.

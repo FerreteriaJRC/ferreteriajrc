@@ -1,6 +1,20 @@
 import { Request, Response, NextFunction } from "express"
 import jwt from "jsonwebtoken"
 
+const jwtSecret = (() => {
+  const secret = process.env.JWT_SECRET
+  if (
+    !secret ||
+    secret.length < 32 ||
+    /tu_secret|cambiar_en_produccion/i.test(secret)
+  ) {
+    throw new Error(
+      "JWT_SECRET debe tener al menos 32 caracteres aleatorios. Genéralo antes de iniciar el servidor."
+    )
+  }
+  return secret
+})()
+
 export interface AuthRequest extends Request {
   user?: {
     id: number
@@ -22,7 +36,7 @@ export function verifyToken(
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as {
+    const decoded = jwt.verify(token, jwtSecret) as {
       id: number
       email: string
       role: string
@@ -39,7 +53,7 @@ export function generateToken(
   email: string,
   role: string
 ): string {
-  return jwt.sign({ id, email, role }, process.env.JWT_SECRET || "secret", {
-    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  return jwt.sign({ id, email, role }, jwtSecret, {
+    expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as jwt.SignOptions["expiresIn"],
   })
 }

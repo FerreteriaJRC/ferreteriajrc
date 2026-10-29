@@ -1,8 +1,6 @@
 import {
   BookOpen,
   CheckCircle2,
-  Download,
-  List,
   MessageCircle,
   Users,
   Wallet,
@@ -12,15 +10,19 @@ import {
   ShoppingCart,
   Calculator,
   ArrowLeftRight,
+  Undo2,
   LogOut,
+  X,
 } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Permission } from "@/types/auth"
 
 interface Module {
   label: string
-  href: string
+  href?: string
+  previewImage?: string
   icon: React.ComponentType<{ className?: string }>
   external?: boolean
   download?: boolean
@@ -30,23 +32,20 @@ interface Module {
 const modules: Module[] = [
   {
     label: "Aplicación Retenciones",
-    href: "/Retenciones.webp",
+    previewImage: "/Retenciones.webp",
     icon: Wallet,
-    external: true,
     requiredPermission: Permission.VIEW_RETENCIONES,
   },
   {
     label: "Cartera",
-    href: "../modules/loadvalue/cartera2026.php",
+    href: "/portal/cartera",
     icon: DollarSign,
-    external: true,
     requiredPermission: Permission.VIEW_CARTERA,
   },
   {
     label: "Catálogos",
-    href: "../corp/catalogos.php",
+    href: "/portal/catalogos",
     icon: BookOpen,
-    external: true,
     requiredPermission: Permission.VIEW_CATALOGOS,
   },
   {
@@ -57,31 +56,15 @@ const modules: Module[] = [
     requiredPermission: Permission.VIEW_COMPRAS,
   },
   {
-    label: "Descargar Catálogo",
-    href: "../catalogo24.pdf",
-    icon: Download,
-    download: true,
-    requiredPermission: Permission.DOWNLOAD_CATALOGOS,
-  },
-  {
-    label: "Lista de Precios",
-    href: "https://ferreteriajrc2015-my.sharepoint.com/:x:/g/personal/sistemas_ferreteriajrc2015_onmicrosoft_com/Ed8PHZBTceRBlh2f7RwxpDsBe8Dq8Y3bNR-_AcEzKpOZCQ?e=OdqMuo",
-    icon: List,
-    external: true,
-    requiredPermission: Permission.VIEW_CATALOGOS,
-  },
-  {
     label: "Mensajería",
-    href: "../modules/sesionferreteria/solicitud_mensajeria.php",
+    href: "/portal/mensajeria",
     icon: MessageCircle,
-    external: true,
     requiredPermission: Permission.VIEW_MENSAJERIA,
   },
   {
     label: "Panel Vendedores",
-    href: "../modules/vendedoresvdos.php",
+    href: "/portal/vendedores",
     icon: Users,
-    external: true,
     requiredPermission: Permission.VIEW_VENDEDORES,
   },
   {
@@ -121,16 +104,21 @@ const modules: Module[] = [
   },
   {
     label: "Traslados",
-    href: "../modules/solicitud.php",
+    href: "/portal/traslados",
     icon: ArrowLeftRight,
-    external: true,
     requiredPermission: Permission.VIEW_TRASLADOS,
+  },
+  {
+    label: "Nota devolución",
+    icon: Undo2,
+    requiredPermission: Permission.VIEW_NOTA_DEVOLUCION,
   },
 ]
 
 export default function ClientPortalDashboard() {
   const { user, logout, hasPermission } = useAuth()
   const navigate = useNavigate()
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   // Filtrar módulos según permisos del usuario
   const availableModules = modules.filter((module) =>
@@ -141,6 +129,17 @@ export default function ClientPortalDashboard() {
     logout()
     navigate("/")
   }
+
+  useEffect(() => {
+    if (!previewImage) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPreviewImage(null)
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [previewImage])
 
   return (
     <div className="min-h-screen bg-background/70 text-foreground">
@@ -200,21 +199,53 @@ export default function ClientPortalDashboard() {
 
         {availableModules.length > 0 ? (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {availableModules.map(({ label, href, icon: Icon, external, download }) => (
-              <a
-                key={label}
-                href={href}
-                target={external ? "_blank" : undefined}
-                rel={external ? "noopener noreferrer" : undefined}
-                download={download}
-                className="group flex h-full items-center gap-4 rounded-3xl border border-border bg-card p-5 text-left text-foreground transition-all hover:-translate-y-1 hover:border-primary hover:bg-primary/5"
-              >
-                <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary">
-                  <Icon className="h-8 w-8" />
-                </span>
-                <span className="font-semibold">{label}</span>
-              </a>
-            ))}
+            {availableModules.map(({ label, href, previewImage, icon: Icon, external, download }) => {
+              const content = (
+                <>
+                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+                    <Icon className="h-8 w-8" />
+                  </span>
+                  <span className="font-semibold">{label}</span>
+                </>
+              )
+              const className = "group flex h-full items-center gap-4 rounded-3xl border border-border bg-card p-5 text-left text-foreground transition-all hover:-translate-y-1 hover:border-primary hover:bg-primary/5"
+
+              return href && !external ? (
+                <Link key={label} to={href} className={className}>
+                  {content}
+                </Link>
+              ) : href ? (
+                <a
+                  key={label}
+                  href={href}
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noopener noreferrer" : undefined}
+                  download={download}
+                  className={className}
+                >
+                  {content}
+                </a>
+              ) : previewImage ? (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setPreviewImage(previewImage)}
+                  aria-haspopup="dialog"
+                  className={className}
+                >
+                  {content}
+                </button>
+              ) : (
+                <div
+                  key={label}
+                  aria-disabled="true"
+                  title="Destino pendiente de configurar"
+                  className={`${className} cursor-not-allowed opacity-60 hover:translate-y-0 hover:border-border hover:bg-card`}
+                >
+                  {content}
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div className="mt-10 rounded-3xl border border-border bg-muted/50 p-8 text-center">
@@ -225,6 +256,35 @@ export default function ClientPortalDashboard() {
           </div>
         )}
       </main>
+
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-8"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Información de Aplicación Retenciones"
+            className="relative flex max-h-full max-w-5xl items-center justify-center"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              aria-label="Cerrar imagen"
+              className="absolute right-2 top-2 z-10 rounded-full bg-black/75 p-2 text-white transition-colors hover:bg-black"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img
+              src={previewImage}
+              alt="Tabla informativa de tarifas y bases de retención"
+              className="max-h-[92vh] max-w-full rounded-md object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

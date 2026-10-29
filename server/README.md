@@ -1,6 +1,6 @@
 # 🗄️ Backend - Ferretería JRC
 
-Sistema de autenticación y base de datos con Node.js, Express y SQLite.
+Sistema de autenticación con Node.js, Express y Supabase. SQLite conserva los permisos locales por rol.
 
 ## 📋 Requisitos
 
@@ -22,7 +22,25 @@ npm install
 cp .env.example .env
 ```
 
-Edita el archivo `.env` con tus configuraciones (especialmente `JWT_SECRET` en producción).
+Edita el archivo `.env` con tus configuraciones. Define `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` desde **Supabase > Project Settings > API**; la clave `service_role` es secreta y solo debe estar en el servidor. También cambia `JWT_SECRET` en producción.
+
+### Solicitudes de mensajería
+
+Antes de usar el formulario del portal, ejecuta el script
+`server/supabase/migrations/20261013000000_create_messaging_requests.sql` en
+el SQL Editor del proyecto Supabase. El formulario carga únicamente usuarios
+activos de `public.users` y guarda las solicitudes en
+`public.messaging_requests`.
+
+### Traslados entre sucursales
+
+Antes de usar el formulario del portal, ejecuta el script
+`server/supabase/migrations/20261020000000_create_branch_transfer_requests.sql`
+en el SQL Editor de Supabase. El formulario consulta vendedores activos de
+`public.users` y guarda las solicitudes, clientes y observaciones en
+`public.branch_transfer_requests`. Ejecuta también
+`server/supabase/migrations/20261021000000_add_products_to_branch_transfers.sql`
+para guardar los productos, referencias, marcas y cantidades de cada traslado.
 
 ## 🔌 Configuración SMTP (Email)
 
@@ -75,6 +93,38 @@ npm start
 ```
 
 ## 📚 Endpoints de API
+
+### Mensajería
+
+- `GET /api/messaging/users` — Lista usuarios activos para los selectores.
+- `POST /api/messaging/requests` — Crea una solicitud con los campos de sucursal,
+  fecha, cliente/proveedor, vendedor, usuario de diligencia, zona/barrio y observaciones.
+
+Ambos endpoints requieren autenticación y el permiso `view_mensajeria`.
+
+### Traslados
+
+- `GET /api/transfers/users` — Lista vendedores activos disponibles.
+- `POST /api/transfers/requests` — Crea una solicitud con bodegas de origen y
+  destino, vendedor, uno o más clientes, productos y observaciones.
+
+La consulta requiere `view_traslados`; la creación requiere `create_traslados`.
+
+### Panel de vendedores
+
+El panel consulta la tabla `public.comprobantes` de Supabase y obtiene la lista
+de vendedores activos de `public.users`. La tabla de indicadores debe tener las
+columnas `seller_user_id`, `period_month`, `period_year`, `facturas`,
+`remisiones`, `cotizaciones`, `factura_remision`, `factura_recibo` y
+`total_recaudo`. `seller_user_id` debe referenciar `public.users(id)`.
+
+- `GET /api/sellers/metrics?year=2026` — Indicadores mensuales generales
+  (promedio de los vendedores activos que tienen registro en ese mes).
+- `GET /api/sellers/metrics?year=2026&sellerId=24` — Indicadores de un vendedor.
+
+La consulta requiere autenticación y el permiso `view_vendedores`. Configura
+`SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en `server/.env`; la clave secreta
+solo debe usarse en el servidor.
 
 ### Autenticación
 
@@ -194,18 +244,22 @@ Respuesta:
 
 ### Estructura
 
-La base de datos SQLite se crea automáticamente en `data/ferreterianew.db` con las siguientes tablas:
+La tabla `public.users` de Supabase almacena las cuentas. El backend lee y modifica sus usuarios allí; el servidor necesita `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en `server/.env`.
 
-- **users** - Usuarios registrados
-- **products** - Catálogo de productos
-- **categories** - Categorías de productos
+El campo `password` debe contener el hash generado con bcrypt (el endpoint de registro lo genera automáticamente). Las cuentas creadas manualmente deben guardar un hash bcrypt, no una contraseña en texto plano. No pongas la clave `service_role` en el `.env` del frontend.
+
+SQLite se sigue creando en `data/ferreterianew.db` con tablas heredadas de usuarios, productos y categorías; la autenticación ya no usa la tabla local de usuarios. Los permisos por rol sí se consultan desde SQLite:
+
 - **role_permissions** - Permisos por rol
 
 ### Conexión desde el Frontend
 
 El frontend se conecta automáticamente a `http://localhost:5000` en desarrollo.
+Para usar otra dirección, define `VITE_API_URL`, por ejemplo:
 
-Para cambiar el URL, edita: `src/services/api.ts`
+```bash
+VITE_API_URL=http://localhost:5000/api
+```
 
 ## 🔒 Roles y Permisos
 

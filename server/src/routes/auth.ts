@@ -2,6 +2,7 @@ import { Router, Response } from "express"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
 import db from "../db.js"
+import { supabase } from "../supabase.js"
 import { generateToken, AuthRequest, verifyToken } from "../middleware/auth.js"
 import {
   sendPasswordResetEmail,
@@ -27,9 +28,13 @@ router.post("/register", async (req: AuthRequest, res: Response) => {
     }
 
     // Verificar si el usuario ya existe
-    const existing = db
-      .prepare("SELECT id FROM users WHERE email = ?")
-      .get(email)
+    const { data: existing, error: lookupError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle()
+
+    if (lookupError) throw lookupError
 
     if (existing) {
       res.status(409).json({ error: "Este email ya está registrado" })
@@ -40,19 +45,20 @@ router.post("/register", async (req: AuthRequest, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Crear usuario
-    const result = db
-      .prepare(
-        `INSERT INTO users (email, password, name, phone, company, role)
-       VALUES (?, ?, ?, ?, ?, ?)`
-      )
-      .run(email, hashedPassword, name, phone || null, company || null, "cliente")
+    const { data: user, error: insertError } = await supabase
+      .from("users")
+      .insert({
+        email,
+        password: hashedPassword,
+        name,
+        phone: phone || null,
+        company: company || null,
+        role: "cliente",
+      })
+      .select("id, email, name, role")
+      .single()
 
-    const userId = result.lastInsertRowid as number
-
-    // Obtener usuario creado
-    const user = db
-      .prepare("SELECT id, email, name, role FROM users WHERE id = ?")
-      .get(userId) as any
+    if (insertError) throw insertError
 
     // Generar token
     const token = generateToken(user.id, user.email, user.role)
@@ -89,11 +95,14 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
     }
 
     // Buscar usuario
-    const user = db
-      .prepare(
-        "SELECT id, email, password, name, role, company FROM users WHERE email = ? AND is_active = 1"
-      )
-      .get(email) as any
+    const { data: user, error: lookupError } = await supabase
+      .from("users")
+      .select("id, email, password, name, role, company")
+      .eq("email", email)
+      .eq("is_active", true)
+      .maybeSingle()
+
+    if (lookupError) throw lookupError
 
     if (!user) {
       res.status(401).json({ error: "Email o contraseña incorrectos" })
@@ -145,9 +154,13 @@ router.post("/forgot-password", async (req: AuthRequest, res: Response) => {
     }
 
     // Buscar usuario
-    const user = db
-      .prepare("SELECT id, email, name FROM users WHERE email = ?")
-      .get(email) as any
+    const { data: user, error: lookupError } = await supabase
+      .from("users")
+      .select("id, email, name")
+      .eq("email", email)
+      .maybeSingle()
+
+    if (lookupError) throw lookupError
 
     if (!user) {
       // No revelar si el email existe o no (seguridad)
@@ -161,9 +174,15 @@ router.post("/forgot-password", async (req: AuthRequest, res: Response) => {
     const resetToken = crypto.randomBytes(32).toString("hex")
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
 
-    db.prepare(
-      "UPDATE users SET password_reset_token = ?, password_reset_expires = ? WHERE id = ?"
-    ).run(resetToken, resetExpires.toISOString(), user.id)
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        password_reset_token: resetToken,
+        password_reset_expires: resetExpires.toISOString(),
+      })
+      .eq("id", user.id)
+
+    if (updateError) throw updateError
 
     // Enviar email
     await sendPasswordResetEmail(user.email, user.name, resetToken)
@@ -193,12 +212,14 @@ router.post("/reset-password", async (req: AuthRequest, res: Response) => {
     }
 
     // Buscar usuario con ese token válido
-    const user = db
-      .prepare(
-        `SELECT id, email FROM users 
-       WHERE password_reset_token = ? AND password_reset_expires > datetime('now')`
-      )
-      .get(token) as any
+    const { data: user, error: lookupError } = await supabase
+      .from("users")
+      .select("id, email")
+      .eq("password_reset_token", token)
+      .gt("password_reset_expires", new Date().toISOString())
+      .maybeSingle()
+
+    if (lookupError) throw lookupError
 
     if (!user) {
       res.status(400).json({ error: "Token inválido o expirado" })
@@ -209,11 +230,16 @@ router.post("/reset-password", async (req: AuthRequest, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Actualizar contraseña y limpiar token
-    db.prepare(
-      `UPDATE users 
-       SET password = ?, password_reset_token = NULL, password_reset_expires = NULL
-       WHERE id = ?`
-    ).run(hashedPassword, user.id)
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        password: hashedPassword,
+        password_reset_token: null,
+        password_reset_expires: null,
+      })
+      .eq("id", user.id)
+
+    if (updateError) throw updateError
 
     res.json({ message: "Contraseña restablecida exitosamente" })
   } catch (error) {
@@ -225,9 +251,13 @@ router.post("/reset-password", async (req: AuthRequest, res: Response) => {
 // Obtener perfil del usuario autenticado
 router.get("/me", verifyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const user = db
-      .prepare("SELECT id, email, name, role, company, phone FROM users WHERE id = ?")
-      .get(req.user?.id) as any
+    const { data: user, error: lookupError } = await supabase
+      .from("users")
+      .select("id, email, name, role, company, phone")
+      .eq("id", req.user?.id)
+      .maybeSingle()
+
+    if (lookupError) throw lookupError
 
     if (!user) {
       res.status(404).json({ error: "Usuario no encontrado" })
@@ -256,14 +286,24 @@ router.put("/me", verifyToken, async (req: AuthRequest, res: Response) => {
   try {
     const { name, phone, company } = req.body
 
-    db.prepare(
-      `UPDATE users SET name = ?, phone = ?, company = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`
-    ).run(name, phone, company, req.user?.id)
+    const { data: user, error: updateError } = await supabase
+      .from("users")
+      .update({
+        name,
+        phone: phone || null,
+        company: company || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", req.user?.id)
+      .select("id, email, name, role, company, phone")
+      .maybeSingle()
 
-    const user = db
-      .prepare("SELECT id, email, name, role, company, phone FROM users WHERE id = ?")
-      .get(req.user?.id)
+    if (updateError) throw updateError
+
+    if (!user) {
+      res.status(404).json({ error: "Usuario no encontrado" })
+      return
+    }
 
     res.json({
       message: "Perfil actualizado",

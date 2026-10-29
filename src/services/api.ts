@@ -1,4 +1,64 @@
-const API_URL = `http://${window.location.hostname}:5000/api`
+const API_URL =
+  import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/api`
+
+export interface MessagingUser {
+  id: number
+  name: string
+}
+
+export interface MessagingRequestInput {
+  branch: string
+  date: string
+  client: string
+  sellerUserId: number
+  diligenceUserId: number
+  neighborhood: string
+  observations: string
+}
+
+export interface TransferUser {
+  id: number
+  name: string
+}
+
+export interface TransferProductInput {
+  productCode: string
+  description: string
+  reference: string
+  brand: string
+  quantity: number
+}
+
+export interface TransferRequestInput {
+  originBranch: string
+  destinationBranch: string
+  sellerUserId: number
+  clients: string[]
+  products: TransferProductInput[]
+  observations: string
+}
+
+export interface Seller {
+  id: number
+  name: string
+}
+
+export interface SellerMonthMetrics {
+  month: number
+  facturas: number
+  remisiones: number
+  cotizaciones: number
+  facturaRemision: number
+  facturaRecibo: number
+  totalRecaudo: number
+}
+
+export interface SellerMetricsResponse {
+  year: number
+  sellerId: number | null
+  sellers: Seller[]
+  months: SellerMonthMetrics[]
+}
 
 export class ApiClient {
   private token: string | null = null
@@ -40,8 +100,8 @@ export class ApiClient {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || "Error en la solicitud")
+      const error = await response.json().catch(() => null) as { error?: string } | null
+      throw new Error(error?.error || "Error en la solicitud")
     }
 
     return response.json()
@@ -133,6 +193,41 @@ export class ApiClient {
       method: "PUT",
       body: JSON.stringify({ name, phone, company }),
     })
+  }
+
+  async getMessagingUsers(): Promise<{ users: MessagingUser[] }> {
+    return this.request("/messaging/users")
+  }
+
+  async createMessagingRequest(
+    request: MessagingRequestInput
+  ): Promise<{ message: string }> {
+    return this.request("/messaging/requests", {
+      method: "POST",
+      body: JSON.stringify(request),
+    })
+  }
+
+  async getTransferUsers(): Promise<{ users: TransferUser[] }> {
+    return this.request("/transfers/users")
+  }
+
+  async createTransferRequest(
+    request: TransferRequestInput
+  ): Promise<{ message: string }> {
+    return this.request("/transfers/requests", {
+      method: "POST",
+      body: JSON.stringify(request),
+    })
+  }
+
+  async getSellerMetrics(
+    year: number,
+    sellerId?: string
+  ): Promise<SellerMetricsResponse> {
+    const params = new URLSearchParams({ year: String(year) })
+    if (sellerId) params.set("sellerId", sellerId)
+    return this.request(`/sellers/metrics?${params.toString()}`)
   }
 }
 
