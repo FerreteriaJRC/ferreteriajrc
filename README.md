@@ -436,3 +436,6 @@ Implemente el tema de los roles y conectar con la base de datos, sin embargo me 
 
 26/10/26
 Se avanzo en cuanto al funcionamiento del modulo de vendedores, sin embargo aun falta crear los vendedores he ingresar los datos correctos ya que por el momento solo esta funcionando si el vendedor que se selecciona es david cutiva.
+
+29/10/26
+Se realizo el modulo de cartera y se pusheo al git hub, me queda pendiente mirar si en vercel quedo bien desplegada o debo de realizar ajustes o correciones

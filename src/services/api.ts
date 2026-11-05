@@ -1,5 +1,8 @@
 const API_URL =
-  import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/api`
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV
+    ? `http://${window.location.hostname}:5000/api`
+    : "/api")
 
 export interface MessagingUser {
   id: number

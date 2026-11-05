@@ -92,6 +92,44 @@ npm run build
 npm start
 ```
 
+## ☁️ Despliegue del backend
+
+Vercel sirve muy bien este frontend, pero este backend es un proceso Express
+persistente y usa `better-sqlite3`; no debe desplegarse como una página estática
+ni ejecutarse en el mismo proyecto frontend de Vercel. Despliégalo como un
+servicio Node en Render, Railway o un VPS.
+
+Por ejemplo, en Render crea un **Web Service** con:
+
+- **Root Directory:** `server`
+- **Build Command:** `npm ci && npm run build`
+- **Start Command:** `npm start`
+
+Configura en el servicio las variables de `server/.env.example`:
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET` (mínimo 32 caracteres
+aleatorios), `JWT_EXPIRES_IN`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
+`SMTP_PASSWORD`, `EMAIL_FROM` y `FRONTEND_URL=https://ferreteriajrc.vercel.app`.
+Render asigna `PORT` automáticamente; no incluyas claves secretas en el
+repositorio.
+
+Después de desplegar, comprueba:
+
+```text
+https://TU-BACKEND/api/health
+```
+
+Debe responder con `{ "status": "Server is running" }`.
+
+En el proyecto de Vercel, crea la variable de entorno
+`VITE_API_URL=https://TU-BACKEND/api` para **Production** y vuelve a desplegar
+el frontend. La URL debe ser HTTPS y no debe incluir `:5000`. Si no defines
+`VITE_API_URL`, el frontend en producción usará `/api`, que solo funcionará si
+configuras un proxy/rewrite de Vercel hacia tu backend.
+
+No uses SQLite como almacén principal de usuarios en un servicio serverless:
+el proyecto ya guarda los usuarios y solicitudes en Supabase. El archivo
+SQLite del backend conserva únicamente la matriz local de permisos por rol.
+
 ## 📚 Endpoints de API
 
 ### Mensajería

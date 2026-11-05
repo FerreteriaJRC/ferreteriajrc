@@ -11,6 +11,15 @@ import {
 
 const router = Router()
 
+// Prueba de base de datos
+router.get("/test-db", async (req: AuthRequest, res: Response) => {
+  try {
+    res.status(200).json({ message: "Conexión a la base de datos exitosa" })
+  } catch (error) {
+    console.error("Error en prueba de base de datos:", error)
+    res.status(500).json({ error: "Error al probar conexión a la base de datos" })
+  }
+})
 // Registro
 router.post("/register", async (req: AuthRequest, res: Response) => {
   try {
