@@ -1,0 +1,4 @@
+---
+deployment:
+  tasks:
+    - /bin/test -f dist/index.html
